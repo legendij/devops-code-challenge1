@@ -1,29 +1,34 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react';
 import './App.css';
-import API_URL from './config'
+import config from './config';
 
 function App() {
-  const [successMessage, setSuccessMessage] = useState() 
-  const [failureMessage, setFailureMessage] = useState() 
+  const [successMessage, setSuccessMessage] = useState('');
+  const [failureMessage, setFailureMessage] = useState('');
 
   useEffect(() => {
     const getId = async () => {
       try {
-        const resp = await fetch(API_URL)
-        setSuccessMessage((await resp.json()).id)
+        const resp = await fetch(config.backendUrl);
+        if (!resp.ok) {
+          throw new Error(`Request failed with status ${resp.status}`);
+        }
+        const data = await resp.json();
+        // backend returns: { message: "SUCCESS <guid>" }
+        setSuccessMessage(data.message);
+      } catch (e) {
+        setFailureMessage(e.message);
       }
-      catch(e) {
-        setFailureMessage(e.message)
-      }
-    }
-    getId()
-  })
+    };
+
+    getId();
+  }, []); // run once on load
 
   return (
     <div className="App">
-      {!failureMessage && !successMessage ? 'Fetching...' : null}
-      {failureMessage ? failureMessage : null}
-      {successMessage ? successMessage : null}
+      {!failureMessage && !successMessage && 'Fetching...'}
+      {failureMessage && failureMessage}
+      {successMessage && successMessage}
     </div>
   );
 }
