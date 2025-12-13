@@ -7,8 +7,8 @@ pipeline {
         AWS_REGION     = 'us-east-1'
 
         // ---- ECR repository URIs ----
-        FRONTEND_REPO = AWS_ACCOUNT_ID + '.dkr.ecr.' + AWS_REGION + '.amazonaws.com/devops-challenge-frontend'
-        BACKEND_REPO  = AWS_ACCOUNT_ID + '.dkr.ecr.' + AWS_REGION + '.amazonaws.com/devops-challenge-backend'
+        FRONTEND_REPO = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/devops-challenge-frontend"
+        BACKEND_REPO  = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/devops-challenge-backend"
 
         // ---- ECS cluster & services ----
         ECS_CLUSTER      = 'devops-challenge-cluster'
@@ -22,6 +22,10 @@ pipeline {
                 checkout scm
             }
         }
+        // ... rest of your stages ...
+    }
+}
+
 
         stage('Build Docker images') {
             steps {
