@@ -2,19 +2,18 @@ pipeline {
     agent any
 
     environment {
-        // ---- Region (matches your Terraform) ----
-        AWS_REGION = 'us-east-1'
+        // ---- Account & Region ----
+        AWS_ACCOUNT_ID = '391061376449'
+        AWS_REGION     = 'us-east-1'
 
-        // ---- ECR repository URIs (replace with your actual URIs from ECR) ----
-        // Example pattern:
-        // 123456789012.dkr.ecr.us-east-1.amazonaws.com/devops-challenge-frontend
-        FRONTEND_REPO = 391061376449.dkr.ecr.us-east-1.amazonaws.com/devops-challenge-frontend
-        BACKEND_REPO  = 391061376449.dkr.ecr.us-east-1.amazonaws.com/devops-challenge-backend
+        // ---- ECR repository URIs ----
+        FRONTEND_REPO = AWS_ACCOUNT_ID + '.dkr.ecr.' + AWS_REGION + '.amazonaws.com/devops-challenge-frontend'
+        BACKEND_REPO  = AWS_ACCOUNT_ID + '.dkr.ecr.' + AWS_REGION + '.amazonaws.com/devops-challenge-backend'
 
-        // ---- ECS cluster & services (from your Terraform config) ----
-        ECS_CLUSTER        = 'devops-challenge-cluster'
-        FRONTEND_SERVICE   = 'devops-challenge-frontend-service'
-        BACKEND_SERVICE    = 'devops-challenge-backend-service'
+        // ---- ECS cluster & services ----
+        ECS_CLUSTER      = 'devops-challenge-cluster'
+        FRONTEND_SERVICE = 'devops-challenge-frontend-service'
+        BACKEND_SERVICE  = 'devops-challenge-backend-service'
     }
 
     stages {
