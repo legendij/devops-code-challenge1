@@ -41,3 +41,5 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`Backend started on port ${PORT}. ctrl+c to exit`);
   console.log(`CORS_ORIGIN: ${CORS_ORIGIN}`);
 });
+
+
