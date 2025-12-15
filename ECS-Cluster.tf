@@ -138,11 +138,11 @@ resource "aws_ecs_service" "frontend" {
   desired_count   = var.desired_tasks
   launch_type     = "FARGATE"
 
-  network_configuration {
-    security_groups  = [aws_security_group.frontend.id]
-    subnets          = aws_subnet.private[*].id
-    assign_public_ip = false
-  }
+ network_configuration {
+  security_groups  = [aws_security_group.frontend.id]
+  subnets          = aws_subnet.public[*].id
+  assign_public_ip = true
+}
 
   load_balancer {
     target_group_arn = aws_lb_target_group.frontend.arn

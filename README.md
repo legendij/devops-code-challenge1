@@ -226,3 +226,83 @@ Before you save, update:
 - `http://http://devops-challenge-alb-151485846.us-east-1.elb.amazonaws.com` → your actual ALB DNS
 - `100.48.237.72` → your Jenkins EC2 public IP
 - Any scaling results text → tweak to match what you actually saw
+
+## Architecture Overview
+
+This project deploys a simple full-stack application (React frontend + Node.js backend) to AWS using ECS Fargate.
+
+**Core AWS Components**
+
+- **VPC**
+  - CIDR: `10.0.0.0/16`
+  - 2 public subnets (for ALB + ECS tasks)
+  - 2 private subnets (reserved for future use)
+  - Internet Gateway attached
+
+- **Application Load Balancer (ALB)**
+  - Internet-facing ALB in the public subnets
+  - Listens on HTTP port 80
+  - Default rule forwards `/` to the **frontend** target group
+  - Listener rule forwards `/api/*` to the **backend** target group
+
+- **ECS Fargate**
+  - Cluster: `devops-challenge-cluster`
+  - Services:
+    - `devops-challenge-frontend-service`
+    - `devops-challenge-backend-service`
+  - Each service runs Fargate tasks using the `awsvpc` network mode
+  - Tasks are placed in public subnets and use security groups to control traffic
+
+- **ECR**
+  - Two repositories:
+    - `devops-challenge-frontend`
+    - `devops-challenge-backend`
+  - Store the Docker images built by Jenkins
+
+- **CloudWatch Logs**
+  - Separate log groups for frontend and backend ECS tasks
+  - Docker `awslogs` driver sends container logs to CloudWatch
+
+- **Jenkins**
+  - Runs as a Docker container on an EC2 instance
+  - Has Docker CLI + AWS CLI installed
+  - Uses an AWS IAM user’s access key/secret via Jenkins credentials
+
+## CI/CD Pipeline
+
+The CI/CD pipeline is defined in the `Jenkinsfile` in the repo and is triggered by GitHub webhooks.
+
+**Pipeline Stages**
+
+1. **Checkout code**
+   - Jenkins pulls the latest code from GitHub (main branch).
+
+2. **Build Docker images**
+   - Builds two images:
+     - `frontend:latest` from `./frontend`
+     - `backend:latest` from `./backend`
+
+3. **Authenticate to ECR**
+   - Uses Jenkins AWS credentials to:
+     - Call `aws ecr get-login-password`
+     - Log Docker into the frontend and backend ECR repos.
+
+4. **Tag and Push images**
+   - Tags:
+     - `frontend:latest` → `<account-id>.dkr.ecr.us-east-1.amazonaws.com/devops-challenge-frontend:latest`
+     - `backend:latest` → `<account-id>.dkr.ecr.us-east-1.amazonaws.com/devops-challenge-backend:latest`
+   - Pushes both images to ECR.
+
+5. **Update ECS services**
+   - Calls:
+     - `aws ecs update-service --cluster devops-challenge-cluster --service devops-challenge-frontend-service --force-new-deployment`
+     - `aws ecs update-service --cluster devops-challenge-cluster --service devops-challenge-backend-service --force-new-deployment`
+   - ECS pulls the new images from ECR and rolls out a new deployment behind the ALB.
+
+## How to Access the Application
+
+1. Get the ALB DNS name (from Terraform output or AWS console), e.g.:
+
+   ```text
+   devops-challenge-alb-xxxxxxxx.us-east-1.elb.amazonaws.com
+
