@@ -15,7 +15,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v4
@@ -27,29 +27,37 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build, Tag, and Push Backend Image
+        env:
+          AWS_ACCOUNT_ID: 391061376449
+          AWS_REGION: us-east-1
+          ECR_REPOSITORY: devops-challenge-backend
         run: |
           cd backend
           docker build -t backend .
-          docker tag backend:latest 391061376449.dkr.ecr.us-east-1.amazonaws.com/backend:latest
-          docker push 391061376449.dkr.ecr.us-east-1.amazonaws.com/backend:latest
+          docker tag backend:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:latest
+          docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:latest
 
       - name: Build, Tag, and Push Frontend Image
+        env:
+          AWS_ACCOUNT_ID: 391061376449
+          AWS_REGION: us-east-1
+          ECR_REPOSITORY: devops-challenge-frontend
         run: |
           cd frontend
           docker build -t frontend .
-          docker tag frontend:latest 391061376449.dkr.ecr.us-east-1.amazonaws.com/frontend:latest
-          docker push 391061376449.dkr.ecr.us-east-1.amazonaws.com/frontend:latest
+          docker tag frontend:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:latest
+          docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:latest
 
       - name: Update ECS Service (Backend)
         run: |
           aws ecs update-service \
-          --cluster devops-challenge-cluster \
-          --service backend-service \
-          --force-new-deployment
+            --cluster devops-challenge-cluster \
+            --service devops-challenge-backend-service \
+            --force-new-deployment
 
       - name: Update ECS Service (Frontend)
         run: |
           aws ecs update-service \
-          --cluster devops-challenge-cluster \
-          --service frontend-service \
-          --force-new-deployment
+            --cluster devops-challenge-cluster \
+            --service devops-challenge-frontend-service \
+            --force-new-deployment
